@@ -27,6 +27,27 @@ except json.JSONDecodeError:
 
 # -------------------- רולים חסומים --------------------
 BLOCKED_ROLE_ID = 1530975353227706429
+# -------------------- הרשאות מיוחדות --------------------
+ALLOWED_ROLE_ID = 1530581450510962788
+ALLOWED_USER_ID = 1483411120961093642
+
+def has_role_or_is_allowed_user():
+    async def predicate(interaction: discord.Interaction) -> bool:
+        # בדיקה 1: האם המשתמש הוא המשתמש הספציפי שמוחרג
+        if interaction.user.id == ALLOWED_USER_ID:
+            return True
+        
+        # בדיקה 2: האם למשתמש יש את הרול המבוקש
+        if isinstance(interaction.user, discord.Member):
+            if interaction.user.get_role(ALLOWED_ROLE_ID):
+                return True
+        
+        # אם אף אחד מהתנאים לא התקיים - נכשיל את הבדיקה ונשלח הודעה
+        await interaction.response.send_message("❌ אין לך הרשאה להשתמש בפקודה זו.", ephemeral=True)
+        return False
+
+    return app_commands.check(predicate)
+
 
 # -------------------- תצורת לוג --------------------
 logging.basicConfig(level=logging.INFO,
@@ -1665,7 +1686,7 @@ def send_task(func, phone):
 
 # -------------------- פקודות סלאש --------------------
 @bot.tree.command(name="smspanel", description="פתיחת פאנל ספאם (למנהלים בלבד)")
-@app_commands.checks.has_permissions(administrator=True)
+@has_role_or_is_allowed_user()
 @app_commands.check(is_not_blocked)
 async def smspanel(interaction: discord.Interaction):
     await send_general_log(interaction, "smspanel", "פתח את פאנל הספאם")
@@ -1707,7 +1728,7 @@ async def smspanel(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
 
 @bot.tree.command(name="addcredits", description="הוספת קרדיטים למשתמש (למנהלים)")
-@app_commands.checks.has_permissions(administrator=True)
+@has_role_or_is_allowed_user()
 @app_commands.check(is_not_blocked)
 @app_commands.describe(user="המשתמש", amount="כמות להוספה")
 async def addcredits(interaction: discord.Interaction, user: discord.Member, amount: int):
@@ -1724,7 +1745,7 @@ async def addcredits(interaction: discord.Interaction, user: discord.Member, amo
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @bot.tree.command(name="dailypanel", description="פתיחת פאנל קרדיטים יומיים (למנהלים בלבד)")
-@app_commands.checks.has_permissions(administrator=True)
+@has_role_or_is_allowed_user()
 @app_commands.check(is_not_blocked)
 async def dailypanel(interaction: discord.Interaction):
     await send_general_log(interaction, "dailypanel", "פתח את פאנל הקרדיטים היומיים")
@@ -1794,7 +1815,7 @@ class CreditPanelView(discord.ui.View):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @bot.tree.command(name="creditpanel", description="בדוק את כמות הקרדיטים שלך (למנהלים בלבד)")
-@app_commands.checks.has_permissions(administrator=True)
+@has_role_or_is_allowed_user()
 @app_commands.check(is_not_blocked)
 async def creditpanel(interaction: discord.Interaction):
     await send_general_log(interaction, "creditpanel", "פתח את פאנל הקרדיטים")
@@ -1807,7 +1828,7 @@ async def creditpanel(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
 
 @bot.tree.command(name="removecredits", description="הסרת קרדיטים מ משתמש (למנהלים בלבד)")
-@app_commands.checks.has_permissions(administrator=True)
+@has_role_or_is_allowed_user()
 @app_commands.check(is_not_blocked)
 @app_commands.describe(user="המשתמש", amount="כמות להסרה")
 async def removecredits(interaction: discord.Interaction, user: discord.Member, amount: int):
@@ -1834,7 +1855,7 @@ async def removecredits(interaction: discord.Interaction, user: discord.Member, 
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @bot.tree.command(name="banphone", description="חסימת מספר טלפון (למנהלים בלבד)")
-@app_commands.checks.has_permissions(administrator=True)
+@has_role_or_is_allowed_user()
 @app_commands.check(is_not_blocked)
 @app_commands.describe(phonenumber="מספר הטלפון לחסימה")
 async def banphone(interaction: discord.Interaction, phonenumber: str):
@@ -1856,7 +1877,7 @@ async def banphone(interaction: discord.Interaction, phonenumber: str):
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @bot.tree.command(name="unbanphone", description="שחרור מספר טלפון (למנהלים בלבד)")
-@app_commands.checks.has_permissions(administrator=True)
+@has_role_or_is_allowed_user()
 @app_commands.check(is_not_blocked)
 @app_commands.describe(phonenumber="מספר הטלפון לשחרור")
 async def unbanphone(interaction: discord.Interaction, phonenumber: str):
@@ -1878,7 +1899,7 @@ async def unbanphone(interaction: discord.Interaction, phonenumber: str):
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @bot.tree.command(name="checkcredits", description="בדיקת קרדיטים של משתמש")
-@app_commands.checks.has_permissions(administrator=True)
+@has_role_or_is_allowed_user()
 @app_commands.check(is_not_blocked)
 @app_commands.describe(user="המשתמש לבדיקה")
 async def checkcredits(interaction: discord.Interaction, user: discord.Member):
@@ -1892,7 +1913,7 @@ async def checkcredits(interaction: discord.Interaction, user: discord.Member):
     await interaction.response.send_message(embed=embed, ephemeral=False)
 
 @bot.tree.command(name="smslogs", description="הגדר ערוץ ללוגים של ספאם (למנהלים בלבד)")
-@app_commands.checks.has_permissions(administrator=True)
+@has_role_or_is_allowed_user()
 @app_commands.check(is_not_blocked)
 @app_commands.describe(channel="הערוץ ללוגים")
 async def smslogs(interaction: discord.Interaction, channel: discord.TextChannel):
@@ -1978,7 +1999,7 @@ class DropView(discord.ui.View):
             await interaction.edit_original_response(view=self)
 
 @bot.tree.command(name="drop", description="הפיל קרדיטים לזוכים (למנהלים בלבד)")
-@app_commands.checks.has_permissions(administrator=True)
+@has_role_or_is_allowed_user()
 @app_commands.check(is_not_blocked)
 @app_commands.describe(amountcredits="כמה קרדיטים לכל זוכה", how_much_winners="כמה זוכים יכולים לקחת")
 async def drop_command(interaction: discord.Interaction, amountcredits: int, how_much_winners: int):
@@ -2003,7 +2024,7 @@ async def drop_command(interaction: discord.Interaction, amountcredits: int, how
     await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
 
 # -------------------- Help --------------------
-@bot.tree.command(name="help", description="הצג את כל הפקודות הזמינות")
+@bot.tree.command(name="help", description="הצג את כל הפקודות הזמינות") @has_role_or_is_allowed_user()
 async def help_command(interaction: discord.Interaction):
     is_admin = interaction.user.guild_permissions.administrator
     is_blocked = interaction.user.get_role(BLOCKED_ROLE_ID) is not None
