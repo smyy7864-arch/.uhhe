@@ -2112,3 +2112,4 @@ if __name__ == "__main__":
         print("❌ לא נמצא טוקן ב-config.json")
     else:
         bot.run(TOKEN)
+
