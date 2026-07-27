@@ -2024,7 +2024,7 @@ async def drop_command(interaction: discord.Interaction, amountcredits: int, how
     await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
 
 # -------------------- Help --------------------
-@bot.tree.command(name="help", description="הצג את כל הפקודות הזמינות") @has_role_or_is_allowed_user() async def help_command(interaction: discord.Interaction):     # הקוד של הפקודה...
+@bot.tree.command(name="help", description="הצג את כל הפקודות הזמינות") @has_role_or_is_allowed_user() @app_commands.check(is_not_blocked) async def help_command(interaction: discord.Interaction):     embed = discord.Embed(         title="📜 רשימת הפקודות",         description="כאן יוצגו כל הפקודות שלך...",         color=discord.Color.blue()     )     await interaction.response.send_message(embed=embed, ephemeral=True)     # הקוד של הפקודה...
 async def help_command(interaction: discord.Interaction):
     is_admin = interaction.user.guild_permissions.administrator
     is_blocked = interaction.user.get_role(BLOCKED_ROLE_ID) is not None
